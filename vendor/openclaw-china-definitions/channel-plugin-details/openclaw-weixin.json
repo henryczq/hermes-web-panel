@@ -1,0 +1,35 @@
+{
+  "id": "openclaw-weixin",
+  "name": "个人微信",
+  "intro": "个人微信渠道插件，使用长轮询方案接入个人微信消息，支持多账号与登录态管理。",
+  "features": [
+    "支持默认账号与 accounts 多账号配置",
+    "支持登录态管理与日志上传",
+    "支持 baseUrl、cdnBaseUrl 等运行参数"
+  ],
+  "configKeys": [
+    "channels.openclaw-weixin",
+    "channels.openclaw-weixin.accounts"
+  ],
+  "fields": [
+    {
+      "key": "baseUrl",
+      "label": "基础地址",
+      "description": "微信长轮询服务地址，通常保留默认值。"
+    },
+    {
+      "key": "cdnBaseUrl",
+      "label": "CDN 地址",
+      "description": "媒体资源相关地址，通常保留默认值。"
+    },
+    {
+      "key": "logUploadUrl",
+      "label": "日志上传地址",
+      "description": "用于执行日志上传命令时的目标地址。"
+    }
+  ],
+  "usageNotes": [
+    "账号登录态通常不完全保存在 openclaw.json 中，还会依赖本地状态目录。",
+    "多账号建议和渠道设置页一起维护，避免只改原始配置文件。"
+  ]
+}

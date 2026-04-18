@@ -1,0 +1,34 @@
+{
+  "id": "wecom-kf",
+  "name": "企业微信客服",
+  "intro": "企业微信客服渠道插件，用于把外部微信用户的客服会话接入 OpenClaw。",
+  "features": [
+    "支持客服 webhook 接入",
+    "支持客服 welcomeText、openKfId 等客服字段",
+    "适合外部客户服务场景"
+  ],
+  "configKeys": [
+    "channels.wecom-kf"
+  ],
+  "fields": [
+    {
+      "key": "webhookPath",
+      "label": "Webhook 路径",
+      "description": "客服消息回调路径，默认通常为 /wecom-kf。"
+    },
+    {
+      "key": "openKfId",
+      "label": "客服 ID",
+      "description": "企业微信客服账号的 openKfId。"
+    },
+    {
+      "key": "welcomeText",
+      "label": "欢迎语",
+      "description": "用户接入客服时自动发送的欢迎消息。"
+    }
+  ],
+  "usageNotes": [
+    "客服场景一般是固定单账号配置，重点关注 webhook 与欢迎语。",
+    "如果同时配置企业微信机器人和客服，建议在页面里清楚区分两个渠道用途。"
+  ]
+}

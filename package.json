@@ -1,0 +1,10 @@
+{
+  "name": "hermes-web-panel",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "packages/admin_contract",
+    "packages/admin_client",
+    "packages/admin_ui"
+  ]
+}

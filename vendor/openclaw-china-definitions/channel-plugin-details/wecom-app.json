@@ -1,0 +1,44 @@
+{
+  "id": "wecom-app",
+  "name": "企业微信应用",
+  "intro": "企业微信自建应用插件，适合 webhook 回调、媒体归档和语音转码场景。",
+  "features": [
+    "支持企业微信应用 webhook 接入",
+    "支持 token、encodingAESKey、corpSecret 等凭证配置",
+    "支持媒体归档与 ASR 语音自动转码"
+  ],
+  "configKeys": [
+    "channels.wecom-app"
+  ],
+  "fields": [
+    {
+      "key": "webhookPath",
+      "label": "Webhook 路径",
+      "description": "企业微信应用回调路径，默认通常为 /wecom-app。"
+    },
+    {
+      "key": "corpId",
+      "label": "企业 ID",
+      "description": "企业微信 Corp ID。"
+    },
+    {
+      "key": "corpSecret",
+      "label": "应用 Secret",
+      "description": "企业微信应用 Secret。"
+    },
+    {
+      "key": "agentId",
+      "label": "Agent ID",
+      "description": "企业微信自建应用的 agentId。"
+    },
+    {
+      "key": "asr.enabled",
+      "label": "语音自动转码",
+      "description": "开启后会尝试把语音消息转成更易处理的文本或标准格式。"
+    }
+  ],
+  "usageNotes": [
+    "如果开启语音自动转码，需要注意服务器是否具备对应依赖环境。",
+    "媒体相关配置通常还会配合 inboundMedia、keepDays 等字段一起使用。"
+  ]
+}

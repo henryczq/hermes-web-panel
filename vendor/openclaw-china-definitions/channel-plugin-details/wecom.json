@@ -1,0 +1,39 @@
+{
+  "id": "wecom",
+  "name": "企业微信机器人",
+  "intro": "企业微信 AI 机器人插件，适合企业内聊天机器人、文档工具和主动消息能力。",
+  "features": [
+    "支持企业微信机器人接入",
+    "支持 dmPolicy、allowFrom 和工具权限控制",
+    "适合企业内部协作与文档类工具集成"
+  ],
+  "configKeys": [
+    "channels.wecom"
+  ],
+  "fields": [
+    {
+      "key": "botId",
+      "label": "机器人 ID",
+      "description": "企业微信 AI 机器人标识。"
+    },
+    {
+      "key": "secret",
+      "label": "机器人 Secret",
+      "description": "企业微信机器人密钥。"
+    },
+    {
+      "key": "dmPolicy",
+      "label": "私聊策略",
+      "description": "控制私聊是否允许直接触发处理。"
+    },
+    {
+      "key": "allowFrom",
+      "label": "允许来源",
+      "description": "当 dmPolicy 为 open 时，通常需要包含 *。"
+    }
+  ],
+  "usageNotes": [
+    "如果 doctor 提示 allowFrom 缺少 *，需要按提示补齐。",
+    "当前安装源存在 @wecom 与 @tencent 两种别名，页面已做兼容识别。"
+  ]
+}

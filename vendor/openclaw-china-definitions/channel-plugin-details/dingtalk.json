@@ -1,0 +1,29 @@
+{
+  "id": "dingtalk",
+  "name": "钉钉",
+  "intro": "钉钉连接器插件，适合接入钉钉机器人或工作台消息。",
+  "features": [
+    "提供钉钉渠道接入能力",
+    "适合 webhook 或机器人消息场景",
+    "以插件安装和配置文件维护为主"
+  ],
+  "configKeys": [
+    "channels.dingtalk"
+  ],
+  "fields": [
+    {
+      "key": "appKey",
+      "label": "应用 Key",
+      "description": "钉钉应用或机器人的关键凭证字段。"
+    },
+    {
+      "key": "appSecret",
+      "label": "应用 Secret",
+      "description": "钉钉应用密钥，通常与 appKey 配套。"
+    }
+  ],
+  "usageNotes": [
+    "当前 Web 端优先负责安装、卸载、启停状态展示。",
+    "复杂配置建议直接结合插件文档和 openclaw.json 调整。"
+  ]
+}

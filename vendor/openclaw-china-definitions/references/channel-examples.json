@@ -1,0 +1,197 @@
+{
+  "feishu": {
+    "displayName": "飞书 / Lark",
+    "spokenAliases": ["飞书", "lark", "feishu"],
+    "summary": "适合默认账号、多账号、群规则和 agent 路由场景。",
+    "queryCommands": [
+      "openclaw config get channels.feishu --json"
+    ],
+    "setCommands": [
+      "openclaw config set channels.feishu.accounts.default.appId <YOUR_APP_ID>",
+      "openclaw config set channels.feishu.accounts.default.appSecret <YOUR_APP_SECRET>",
+      "openclaw config set channels.feishu.accounts.default.enabled true",
+      "openclaw config set channels.feishu.accounts.default.requireMention true",
+      "openclaw config set channels.feishu.accounts.default.dmPolicy \"allowlist\"",
+      "openclaw config set channels.feishu.accounts.default.allowFrom '[\"ou_xxx\"]' --strict-json"
+    ],
+    "accountCommands": [
+      "openclaw config set channels.feishu.accounts.work.appId <YOUR_WORK_APP_ID>",
+      "openclaw config set channels.feishu.accounts.work.appSecret <YOUR_WORK_APP_SECRET>",
+      "openclaw config set channels.feishu.accounts.work.enabled true",
+      "openclaw config set channels.feishu.accounts.work.botName \"Work Bot\""
+    ],
+    "unsetCommands": [
+      "openclaw config unset channels.feishu.accounts.work"
+    ],
+    "notes": [
+      "默认账号直接使用 accounts.default，命名账号继续使用 accounts.<accountId>。",
+      "群策略需要时再补 accounts.<accountId>.groups.<groupId> 级别覆盖，默认账号也走 accounts.default.groups。"
+    ]
+  },
+  "dingtalk": {
+    "displayName": "钉钉",
+    "spokenAliases": ["钉钉", "dingtalk"],
+    "summary": "适合钉钉机器人或工作台消息接入。",
+    "queryCommands": [
+      "openclaw config get channels.dingtalk --json"
+    ],
+    "setCommands": [
+      "openclaw config set channels.dingtalk.appKey <YOUR_APP_KEY>",
+      "openclaw config set channels.dingtalk.appSecret <YOUR_APP_SECRET>",
+      "openclaw config set channels.dingtalk.enabled true"
+    ],
+    "accountCommands": [],
+    "unsetCommands": [
+      "openclaw config unset channels.dingtalk.appSecret"
+    ],
+    "notes": [
+      "当前更常见的是插件安装和基础凭证维护。"
+    ]
+  },
+  "qqbot": {
+    "displayName": "QQ Bot",
+    "spokenAliases": ["qq", "qqbot", "qq bot", "qq机器人"],
+    "summary": "适合 QQ Bot、多账号、富媒体消息场景。",
+    "queryCommands": [
+      "openclaw config get channels.qqbot --json"
+    ],
+    "setCommands": [
+      "openclaw config set channels.qqbot.appId <YOUR_APP_ID>",
+      "openclaw config set channels.qqbot.clientSecret <YOUR_CLIENT_SECRET>",
+      "openclaw config set channels.qqbot.enabled true",
+      "openclaw config set channels.qqbot.markdownSupport true"
+    ],
+    "accountCommands": [
+      "openclaw config set channels.qqbot.accounts.work.appId <YOUR_APP_ID>",
+      "openclaw config set channels.qqbot.accounts.work.clientSecret <YOUR_CLIENT_SECRET>",
+      "openclaw config set channels.qqbot.accounts.work.enabled true"
+    ],
+    "unsetCommands": [
+      "openclaw config unset channels.qqbot.accounts.work"
+    ],
+    "notes": [
+      "多账号时建议每个 accountId 取一个清晰名称。"
+    ]
+  },
+  "openclaw-weixin": {
+    "displayName": "个人微信",
+    "spokenAliases": ["个人微信", "微信个人号", "openclaw-weixin", "weixin", "微信"],
+    "summary": "适合个人微信长轮询接入和多账号维护。",
+    "queryCommands": [
+      "openclaw config get channels.openclaw-weixin --json"
+    ],
+    "setCommands": [
+      "openclaw config set channels.openclaw-weixin.enabled true",
+      "openclaw config set channels.openclaw-weixin.baseUrl \"https://your-weixin-api.example.com\"",
+      "openclaw config set channels.openclaw-weixin.cdnBaseUrl \"https://your-weixin-cdn.example.com/c2c\"",
+      "openclaw config set channels.openclaw-weixin.logUploadUrl \"https://example.com/weixin/logs-upload\""
+    ],
+    "accountCommands": [
+      "openclaw config set channels.openclaw-weixin.accounts.work.enabled true",
+      "openclaw config set channels.openclaw-weixin.accounts.work.baseUrl \"https://your-weixin-api.example.com\""
+    ],
+    "unsetCommands": [
+      "openclaw config unset channels.openclaw-weixin.accounts.work"
+    ],
+    "notes": [
+      "账号登录态通常还依赖本地状态目录，不只是在 openclaw.json 里。",
+      "如需扫码登录，常配合 openclaw channels login --channel openclaw-weixin 使用。"
+    ]
+  },
+  "wechat-mp": {
+    "displayName": "微信公众号",
+    "spokenAliases": ["微信公众号", "公众号", "wechat-mp", "微信公众平台", "微信"],
+    "summary": "适合公众号 webhook 接入。",
+    "queryCommands": [
+      "openclaw config get channels.wechat-mp --json"
+    ],
+    "setCommands": [
+      "openclaw config set channels.wechat-mp.enabled true",
+      "openclaw config set channels.wechat-mp.webhookPath \"/wechat-mp\"",
+      "openclaw config set channels.wechat-mp.token <YOUR_TOKEN>",
+      "openclaw config set channels.wechat-mp.encodingAESKey <YOUR_AES_KEY>"
+    ],
+    "accountCommands": [],
+    "unsetCommands": [
+      "openclaw config unset channels.wechat-mp.encodingAESKey"
+    ],
+    "notes": [
+      "公众号通常以单账号配置为主，重点关注 webhook 是否能被公网访问。"
+    ]
+  },
+  "wecom": {
+    "displayName": "企业微信机器人",
+    "spokenAliases": ["企业微信", "企微", "企业微信机器人", "企微机器人", "wecom"],
+    "summary": "适合企业微信机器人场景。",
+    "queryCommands": [
+      "openclaw config get channels.wecom --json"
+    ],
+    "setCommands": [
+      "openclaw config set channels.wecom.botId <YOUR_BOT_ID>",
+      "openclaw config set channels.wecom.secret <YOUR_BOT_SECRET>",
+      "openclaw config set channels.wecom.enabled true",
+      "openclaw config set channels.wecom.dmPolicy \"allowlist\"",
+      "openclaw config set channels.wecom.allowFrom '[\"*\"]' --strict-json"
+    ],
+    "accountCommands": [],
+    "unsetCommands": [
+      "openclaw config unset channels.wecom.secret"
+    ],
+    "notes": [
+      "如果 dmPolicy 设为 open，通常还要按 doctor 提示补 allowFrom。"
+    ]
+  },
+  "wecom-app": {
+    "displayName": "企业微信应用",
+    "spokenAliases": ["企业微信应用", "企微应用", "wecom-app", "企业微信自建应用", "企微"],
+    "summary": "适合企业微信应用 webhook、媒体处理和语音转码场景。",
+    "queryCommands": [
+      "openclaw config get channels.wecom-app --json"
+    ],
+    "setCommands": [
+      "openclaw config set channels.wecom-app.enabled true",
+      "openclaw config set channels.wecom-app.webhookPath \"/wecom-app\"",
+      "openclaw config set channels.wecom-app.corpId <YOUR_CORP_ID>",
+      "openclaw config set channels.wecom-app.corpSecret <YOUR_CORP_SECRET>",
+      "openclaw config set channels.wecom-app.agentId <YOUR_AGENT_ID>",
+      "openclaw config set channels.wecom-app.asr.enabled true"
+    ],
+    "accountCommands": [
+      "openclaw config set channels.wecom-app.accounts.support.enabled true",
+      "openclaw config set channels.wecom-app.accounts.support.corpId <YOUR_CORP_ID>",
+      "openclaw config set channels.wecom-app.accounts.support.corpSecret <YOUR_CORP_SECRET>",
+      "openclaw config set channels.wecom-app.accounts.support.agentId <YOUR_AGENT_ID>"
+    ],
+    "unsetCommands": [
+      "openclaw config unset channels.wecom-app.accounts.support"
+    ],
+    "notes": [
+      "如开启语音自动转码，记得确认运行环境具备对应依赖。"
+    ]
+  },
+  "wecom-kf": {
+    "displayName": "企业微信客服",
+    "spokenAliases": ["企业微信客服", "企微客服", "wecom-kf", "微信客服", "企微"],
+    "summary": "适合企业微信客服接入和欢迎语场景。",
+    "queryCommands": [
+      "openclaw config get channels.wecom-kf --json"
+    ],
+    "setCommands": [
+      "openclaw config set channels.wecom-kf.enabled true",
+      "openclaw config set channels.wecom-kf.webhookPath \"/wecom-kf\"",
+      "openclaw config set channels.wecom-kf.openKfId <YOUR_OPEN_KF_ID>",
+      "openclaw config set channels.wecom-kf.welcomeText \"您好，欢迎咨询\""
+    ],
+    "accountCommands": [
+      "openclaw config set channels.wecom-kf.accounts.support.enabled true",
+      "openclaw config set channels.wecom-kf.accounts.support.openKfId <YOUR_OPEN_KF_ID>",
+      "openclaw config set channels.wecom-kf.accounts.support.welcomeText \"您好，欢迎咨询\""
+    ],
+    "unsetCommands": [
+      "openclaw config unset channels.wecom-kf.accounts.support"
+    ],
+    "notes": [
+      "客服场景重点关注 webhook、客服 ID 和欢迎语。"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "id": "wechat-mp",
+  "name": "微信公众号",
+  "intro": "微信公众号渠道插件，适用于订阅号和服务号的 webhook 接入。",
+  "features": [
+    "支持公众号消息接入",
+    "支持 webhookPath、token、encodingAESKey 等回调配置",
+    "适合固定账号场景"
+  ],
+  "configKeys": [
+    "channels.wechat-mp"
+  ],
+  "fields": [
+    {
+      "key": "webhookPath",
+      "label": "Webhook 路径",
+      "description": "公众号回调接收路径，默认通常为 /wechat-mp。"
+    },
+    {
+      "key": "token",
+      "label": "校验 Token",
+      "description": "微信公众平台回调验证使用的 Token。"
+    },
+    {
+      "key": "encodingAESKey",
+      "label": "消息加密 Key",
+      "description": "启用消息加密时需要填写。"
+    }
+  ],
+  "usageNotes": [
+    "当前 Web 端优先做插件状态管理，详细字段建议结合配置文档维护。",
+    "公众号通常以单账号配置为主，注意回调地址和公网访问。"
+  ]
+}

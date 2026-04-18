@@ -1,0 +1,43 @@
+{
+  "id": "feishu",
+  "name": "飞书 / Lark",
+  "intro": "基于 @larksuite/openclaw-lark 的飞书渠道插件，默认配置与命名账号统一收口到 channels.feishu.accounts 下。",
+  "features": [
+    "支持 accounts.default 与 accounts.<accountId> 统一管理飞书账号",
+    "支持账号级 groups 默认规则与指定群覆盖",
+    "支持 bindings 按 accountId 或 peer 路由到不同 agent"
+  ],
+  "configKeys": [
+    "channels.feishu.accounts.default",
+    "channels.feishu.accounts.default.groups",
+    "channels.feishu.accounts.work",
+    "bindings[].match.accountId"
+  ],
+  "fields": [
+    {
+      "key": "appId",
+      "label": "应用 App ID",
+      "description": "飞书应用的 App ID，用于事件订阅与消息发送认证。"
+    },
+    {
+      "key": "appSecret",
+      "label": "应用 Secret",
+      "description": "飞书应用密钥，通常与 appId 配套使用。"
+    },
+    {
+      "key": "botName",
+      "label": "机器人名称",
+      "description": "用于界面识别默认账号或多账号实例。"
+    },
+    {
+      "key": "requireMention",
+      "label": "需要 @",
+      "description": "控制群聊里是否必须 @ 机器人后才触发处理。"
+    }
+  ],
+  "usageNotes": [
+    "默认配置直接写在 channels.feishu.accounts.default 下，命名账号继续写在 channels.feishu.accounts.<accountId> 下。",
+    "如果群聊有特殊策略，优先在 channels.feishu.accounts.<accountId>.groups 中做覆盖，默认账号使用 channels.feishu.accounts.default.groups。",
+    "agent 路由和工作空间建议配合 bindings 一起配置。"
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "id": "qqbot",
+  "name": "QQ 机器人",
+  "intro": "QQ Bot 渠道插件，支持多账号、富媒体、主动消息和语音处理能力。",
+  "features": [
+    "支持默认账号与 accounts 多账号配置",
+    "支持图片、语音、视频、文件等富媒体能力",
+    "支持主动消息、群聊和私聊场景"
+  ],
+  "configKeys": [
+    "channels.qqbot",
+    "channels.qqbot.accounts"
+  ],
+  "fields": [
+    {
+      "key": "appId",
+      "label": "App ID",
+      "description": "QQ 机器人应用的 App ID。"
+    },
+    {
+      "key": "clientSecret",
+      "label": "Client Secret",
+      "description": "QQ 机器人密钥，可放默认账号或具体账号下。"
+    },
+    {
+      "key": "markdownSupport",
+      "label": "Markdown 支持",
+      "description": "控制消息发送时是否启用 QQ Markdown 能力。"
+    },
+    {
+      "key": "imageServerBaseUrl",
+      "label": "图片服务地址",
+      "description": "用于富媒体上传后的外链访问或回显。"
+    }
+  ],
+  "usageNotes": [
+    "多账号情况下，建议每个账号都命名清楚，避免发送时混淆。",
+    "如果需要主动消息，通常还要结合已知用户或目标 openid 使用。",
+    "升级脚本里兼容了 openclaw-qqbot、qqbot、openclaw-qq 等旧别名。"
+  ]
+}
