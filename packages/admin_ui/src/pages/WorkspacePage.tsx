@@ -68,6 +68,25 @@ function getFileDescription(filePath: string): string {
   }
 }
 
+function getFileDisplayTitle(filePath: string): string {
+  switch (filePath) {
+    case 'SOUL.md':
+      return '人格设定'
+    case 'MEMORY.md':
+      return '长期记忆'
+    case 'USER.md':
+      return '用户画像'
+    case 'AGENTS.md':
+      return '协作说明'
+    case 'config.yaml':
+      return '运行配置'
+    case '.env':
+      return '环境变量'
+    default:
+      return filePath
+  }
+}
+
 export default function WorkspacePage() {
   const client = useHermesClient()
   const { selectedProfile, setSelectedProfile } = useProfile()
@@ -523,6 +542,34 @@ export default function WorkspacePage() {
                     <Text strong style={{ display: 'block', marginBottom: 10 }}>
                       核心文件
                     </Text>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                        gap: 10,
+                        marginBottom: 14,
+                      }}
+                    >
+                      {coreFiles.map((item) => (
+                        <button
+                          key={item.path}
+                          type="button"
+                          onClick={() => handleSwitchFile(item.path)}
+                          style={{
+                            textAlign: 'left',
+                            border: item.path === activeFile ? '1px solid #f0b84b' : '1px solid #e5e7eb',
+                            background: item.path === activeFile ? '#fff7e6' : '#fff',
+                            borderRadius: 10,
+                            padding: '12px 14px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div style={{ fontWeight: 700, marginBottom: 4 }}>{getFileDisplayTitle(item.path)}</div>
+                          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6 }}>{item.path}</div>
+                          <div style={{ fontSize: 12, color: '#444' }}>{getFileDescription(item.path)}</div>
+                        </button>
+                      ))}
+                    </div>
                     <List
                       locale={{ emptyText: <Empty description="暂无核心文件" /> }}
                       dataSource={coreFiles}
@@ -538,7 +585,12 @@ export default function WorkspacePage() {
                           onClick={() => handleSwitchFile(item.path)}
                         >
                           <List.Item.Meta
-                            title={<Text strong={item.path === activeFile}>{item.path}</Text>}
+                            title={
+                              <Space size={8}>
+                                <Text strong={item.path === activeFile}>{getFileDisplayTitle(item.path)}</Text>
+                                <Text type="secondary">{item.path}</Text>
+                              </Space>
+                            }
                             description={getFileDescription(item.path)}
                           />
                         </List.Item>
