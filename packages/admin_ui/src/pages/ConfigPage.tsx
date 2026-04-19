@@ -171,7 +171,7 @@ export default function ConfigPage() {
   }
 
   if (!selectedProfile) {
-    return <Alert message="请先选择一个配置档案" type="info" />
+    return <Alert message="请先在档案页选择一个档案后再进入高级配置" type="info" />
   }
 
   const envColumns = [
@@ -229,6 +229,12 @@ export default function ConfigPage() {
 
   return (
     <div>
+      <Alert
+        type="warning"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="这里编辑的是原始配置文件，可能绕过配置源/档案绑定关系。建议仅高级用户使用。"
+      />
       <Title level={4}>系统配置</Title>
       <Tabs
         defaultActiveKey="config"
