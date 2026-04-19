@@ -33,6 +33,50 @@ class HermesProfileSummary(BaseModel):
     channels: list[str] = []
     default_model: str | None = None
     provider: str | None = None
+    binding_mode: str | None = None
+    source_id: str | None = None
+    source_name: str | None = None
+
+
+class ConfigSourceItem(BaseModel):
+    id: str
+    name: str
+    kind: str
+    backing_profile: str | None = None
+    display_name: str | None = None
+    note: str | None = None
+    linked_profiles: list[str] = []
+
+
+class ProfileBindingItem(BaseModel):
+    profile_name: str
+    mode: str
+    source_id: str | None = None
+    source_name: str | None = None
+
+
+class ProfileBindingUpdateRequest(BaseModel):
+    mode: str
+    source_id: str | None = None
+
+
+class ChannelOverviewItem(BaseModel):
+    channel_id: str
+    source_id: str | None = None
+    source_name: str | None = None
+    profile_name: str
+    mode: str
+    configured: bool = False
+    enabled: bool = False
+
+
+class AiOverviewItem(BaseModel):
+    profile_name: str
+    source_id: str | None = None
+    source_name: str | None = None
+    mode: str
+    default_model: str | None = None
+    provider: str | None = None
 
 
 class HermesWorkspaceFileEntry(BaseModel):

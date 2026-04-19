@@ -25,6 +25,11 @@ import type {
   WorkspaceFileResponse,
   WorkspaceFileUpdateRequest,
   ConfigBackupItem,
+  ConfigSourceItem,
+  ProfileBindingItem,
+  ProfileBindingUpdateRequest,
+  ChannelOverviewItem,
+  AiOverviewItem,
 } from 'hermes_web_panel_contract'
 
 const BASE = '/api/hermes'
@@ -234,6 +239,32 @@ export class HermesAdminClient {
       method: 'POST',
       body: JSON.stringify(body),
     })
+  }
+
+  async listConfigSources(): Promise<ConfigSourceItem[]> {
+    return request(`${BASE}/config-sources`)
+  }
+
+  async listProfileBindings(): Promise<ProfileBindingItem[]> {
+    return request(`${BASE}/profile-bindings`)
+  }
+
+  async updateProfileBinding(
+    name: string,
+    body: ProfileBindingUpdateRequest,
+  ): Promise<{ profile_name: string; mode: string; source_id?: string | null }> {
+    return request(`${BASE}/profiles/${encodeURIComponent(name)}/binding`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    })
+  }
+
+  async getChannelsOverview(): Promise<ChannelOverviewItem[]> {
+    return request(`${BASE}/channels/overview`)
+  }
+
+  async getAiOverview(): Promise<AiOverviewItem[]> {
+    return request(`${BASE}/ai/overview`)
   }
 
   async getChannels(name: string): Promise<ChannelListResponse> {

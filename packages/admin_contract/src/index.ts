@@ -25,6 +25,50 @@ export interface HermesProfileSummary {
   channels: string[]
   default_model?: string | null
   provider?: string | null
+  binding_mode?: string | null
+  source_id?: string | null
+  source_name?: string | null
+}
+
+export interface ConfigSourceItem {
+  id: string
+  name: string
+  kind: string
+  backing_profile?: string | null
+  display_name?: string | null
+  note?: string | null
+  linked_profiles: string[]
+}
+
+export interface ProfileBindingItem {
+  profile_name: string
+  mode: string
+  source_id?: string | null
+  source_name?: string | null
+}
+
+export interface ProfileBindingUpdateRequest {
+  mode: string
+  source_id?: string | null
+}
+
+export interface ChannelOverviewItem {
+  channel_id: string
+  source_id?: string | null
+  source_name?: string | null
+  profile_name: string
+  mode: string
+  configured: boolean
+  enabled: boolean
+}
+
+export interface AiOverviewItem {
+  profile_name: string
+  source_id?: string | null
+  source_name?: string | null
+  mode: string
+  default_model?: string | null
+  provider?: string | null
 }
 
 export interface WorkspaceFileEntry {

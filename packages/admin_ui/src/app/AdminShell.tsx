@@ -1,15 +1,9 @@
-import { useState, useMemo, createElement, useEffect } from 'react'
-import { Layout, Menu, Drawer, Button, Space, Tag, Select, Grid, Typography } from 'antd'
+import { useState, useMemo, createElement } from 'react'
+import { Layout, Menu, Drawer, Button, Space, Grid } from 'antd'
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
 import type { MenuKey } from './admin-menu.config'
 import { menuDefs } from './admin-menu.config'
-import { useProfile } from '../context/ProfileContext.js'
-import { useHermesClient } from 'hermes_web_panel_client'
-import { useAsyncData } from '../hooks/useAsyncData.js'
-import type { HermesProfileSummary } from 'hermes_web_panel_contract'
-
 const { Sider, Content, Header } = Layout
-const { Text } = Typography
 
 interface AdminShellProps {
   activeMenu: MenuKey
@@ -17,32 +11,11 @@ interface AdminShellProps {
   children: React.ReactNode
 }
 
-function getProfileDisplayName(profileName: string): string {
-  return profileName === 'default' ? '主配置' : profileName
-}
-
-function getPreferredProfileLabel(profile: HermesProfileSummary): string {
-  return profile.display_name?.trim() || getProfileDisplayName(profile.name)
-}
-
 export default function AdminShell({ activeMenu, onMenuChange, children }: AdminShellProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const { selectedProfile, setSelectedProfile } = useProfile()
-  const client = useHermesClient()
   const screens = Grid.useBreakpoint()
   const isDesktop = screens.lg ?? false
-
-  const { data: profiles } = useAsyncData<HermesProfileSummary[]>(
-    () => client.listProfiles(),
-    [],
-  )
-
-  useEffect(() => {
-    if (!selectedProfile && profiles && profiles.length > 0) {
-      setSelectedProfile(profiles[0].name)
-    }
-  }, [profiles, selectedProfile, setSelectedProfile])
 
   const menuItems = useMemo(
     () =>
@@ -57,25 +30,6 @@ export default function AdminShell({ activeMenu, onMenuChange, children }: Admin
   const headerContent = (
     <Space>
       <span style={{ fontWeight: 600 }}>Hermes 管理台</span>
-      {profiles && profiles.length > 0 && (
-        <Select
-          style={{ width: 180 }}
-          value={selectedProfile}
-          placeholder="选择配置档案"
-          onChange={setSelectedProfile}
-          options={profiles.map((p) => ({
-            value: p.name,
-            label: (
-              <Space>
-                {getPreferredProfileLabel(p)}
-                {p.display_name?.trim() && <Text type="secondary">({p.name})</Text>}
-                {p.name === 'default' && <Tag color="blue">默认</Tag>}
-                {p.is_active && <Tag color="green">当前</Tag>}
-              </Space>
-            ),
-          }))}
-        />
-      )}
     </Space>
   )
 

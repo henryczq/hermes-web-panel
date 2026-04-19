@@ -17,6 +17,7 @@ from admin_contract.models import (
     OpenClawImportRequest,
     ChannelUpdateRequest,
     WorkspaceFileUpdateRequest,
+    ProfileBindingUpdateRequest,
 )
 from admin_core.hermes_profiles import (
     list_profile_summaries,
@@ -71,6 +72,9 @@ from admin_core.hermes_onboarding import (
     apply_onboard_session,
 )
 from admin_core.shared_china_registry import get_china_channels_bundle
+from admin_core.hermes_sources import list_config_sources
+from admin_core.hermes_bindings import list_profile_bindings, set_profile_binding
+from admin_core.hermes_overview import list_channels_overview, list_ai_overview
 
 
 router = APIRouter()
@@ -113,6 +117,42 @@ def profiles_create(body: ProfileCreateRequest):
         return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
     except FileExistsError as e:
         return JSONResponse(status_code=409, content={"success": False, "error": str(e)})
+
+
+@router.get("/api/hermes/config-sources")
+def config_sources_list():
+    items = list_config_sources()
+    return ApiEnvelope(success=True, data=[item.model_dump() for item in items])
+
+
+@router.get("/api/hermes/profile-bindings")
+def profile_bindings_list():
+    summaries = list_profile_summaries()
+    items = list_profile_bindings([s.name for s in summaries])
+    return ApiEnvelope(success=True, data=[item.model_dump() for item in items])
+
+
+@router.put("/api/hermes/profiles/{name}/binding")
+def profile_binding_update(name: str, body: ProfileBindingUpdateRequest):
+    if not profile_exists(name):
+        return JSONResponse(status_code=404, content={"success": False, "error": f"Profile '{name}' not found"})
+    try:
+        set_profile_binding(None, name, body.mode, body.source_id)
+        return ApiEnvelope(success=True, data={"profile_name": name, "mode": body.mode, "source_id": body.source_id})
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
+
+
+@router.get("/api/hermes/channels/overview")
+def channels_overview():
+    items = list_channels_overview()
+    return ApiEnvelope(success=True, data=[item.model_dump() for item in items])
+
+
+@router.get("/api/hermes/ai/overview")
+def ai_overview():
+    items = list_ai_overview()
+    return ApiEnvelope(success=True, data=[item.model_dump() for item in items])
 
 
 @router.post("/api/hermes/profiles/clone")

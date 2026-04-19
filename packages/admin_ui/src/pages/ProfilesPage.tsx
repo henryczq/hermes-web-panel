@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Table,
   Button,
@@ -28,7 +28,7 @@ import {
 import { useHermesClient } from 'hermes_web_panel_client'
 import { useAsyncData } from '../hooks/useAsyncData.js'
 import { useProfile } from '../context/ProfileContext.js'
-import type { HermesProfileSummary } from 'hermes_web_panel_contract'
+import type { HermesProfileSummary, ConfigSourceItem } from 'hermes_web_panel_contract'
 
 const { Title, Text } = Typography
 const PROFILE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/
@@ -54,9 +54,12 @@ export default function ProfilesPage() {
   const [metaTarget, setMetaTarget] = useState<HermesProfileSummary | null>(null)
   const [gatewayBusyName, setGatewayBusyName] = useState<string | null>(null)
   const [gatewayBusyAction, setGatewayBusyAction] = useState<string | null>(null)
+  const [bindingOpen, setBindingOpen] = useState(false)
+  const [bindingTarget, setBindingTarget] = useState<HermesProfileSummary | null>(null)
   const [form] = Form.useForm()
   const [cloneForm] = Form.useForm()
   const [metaForm] = Form.useForm()
+  const [bindingForm] = Form.useForm()
 
   const { data, loading, reload } = useAsyncData<HermesProfileSummary[]>(
     () => client.listProfiles(),
@@ -69,6 +72,11 @@ export default function ProfilesPage() {
       return client.getProfileSummary(selectedProfile)
     },
     [selectedProfile],
+  )
+
+  const { data: sources } = useAsyncData<ConfigSourceItem[]>(
+    () => client.listConfigSources(),
+    [],
   )
 
   const handleCreate = async (values: { name: string; display_name?: string; note?: string; clone_from?: string }) => {
@@ -144,6 +152,12 @@ export default function ProfilesPage() {
     })
   }
 
+  useEffect(() => {
+    if (!selectedProfile && data && data.length > 0) {
+      setSelectedProfile(data[0].name)
+    }
+  }, [data, selectedProfile, setSelectedProfile])
+
   const handleGatewayAction = async (record: HermesProfileSummary, action: 'start' | 'stop' | 'restart') => {
     const label = getPreferredProfileLabel(record)
     const actionLabelMap = {
@@ -178,6 +192,26 @@ export default function ProfilesPage() {
     }
   }
 
+  const handleBindingSave = async (values: { mode: string; source_id?: string }) => {
+    if (!bindingTarget) return
+    try {
+      await client.updateProfileBinding(bindingTarget.name, {
+        mode: values.mode,
+        source_id: values.mode === 'inherit' ? values.source_id || null : null,
+      })
+      message.success('绑定关系已更新')
+      setBindingOpen(false)
+      setBindingTarget(null)
+      bindingForm.resetFields()
+      reload()
+      if (selectedProfile === bindingTarget.name) {
+        reloadSummary()
+      }
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '更新绑定关系失败')
+    }
+  }
+
   const columns = [
     {
       title: '名称',
@@ -201,6 +235,15 @@ export default function ProfilesPage() {
       dataIndex: 'is_active',
       key: 'is_active',
       render: (active: boolean) => (active ? <Tag color="green">当前</Tag> : <Tag>未启用</Tag>),
+    },
+    {
+      title: '配置源',
+      key: 'source_name',
+      render: (_: unknown, record: HermesProfileSummary) => (
+        record.binding_mode === 'inherit'
+          ? <Tag color="purple">{record.source_name || record.source_id || '未命名配置源'}</Tag>
+          : <Tag>独立</Tag>
+      ),
     },
     {
       title: '默认模型',
@@ -269,6 +312,20 @@ export default function ProfilesPage() {
               setMetaOpen(true)
             }}
           />
+          <Button
+            size="small"
+            title="绑定配置源"
+            onClick={() => {
+              setBindingTarget(record)
+              bindingForm.setFieldsValue({
+                mode: record.binding_mode || 'standalone',
+                source_id: record.source_id || undefined,
+              })
+              setBindingOpen(true)
+            }}
+          >
+            绑定
+          </Button>
           <Button
             size="small"
             danger
@@ -459,6 +516,52 @@ export default function ProfilesPage() {
               </Form.Item>
             </Form>
           </>
+        )}
+      </Modal>
+
+      <Modal
+        title="设置配置源绑定"
+        open={bindingOpen}
+        onCancel={() => {
+          setBindingOpen(false)
+          setBindingTarget(null)
+          bindingForm.resetFields()
+        }}
+        onOk={() => bindingForm.submit()}
+      >
+        {bindingTarget && (
+          <Form form={bindingForm} layout="vertical" onFinish={handleBindingSave}>
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message={`当前档案：${getPreferredProfileLabel(bindingTarget)}`}
+              description="第一版支持独立档案，或绑定到一个共享配置源。"
+            />
+            <Form.Item name="mode" label="模式" rules={[{ required: true, message: '请选择模式' }]}>
+              <Select
+                options={[
+                  { value: 'standalone', label: '独立档案' },
+                  { value: 'inherit', label: '继承共享配置源' },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item
+              noStyle
+              shouldUpdate={(prev, cur) => prev.mode !== cur.mode}
+            >
+              {({ getFieldValue }) => getFieldValue('mode') === 'inherit' ? (
+                <Form.Item name="source_id" label="配置源" rules={[{ required: true, message: '请选择配置源' }]}>
+                  <Select
+                    options={(sources || []).map((item) => ({
+                      value: item.id,
+                      label: item.display_name || item.name,
+                    }))}
+                  />
+                </Form.Item>
+              ) : null}
+            </Form.Item>
+          </Form>
         )}
       </Modal>
     </div>
