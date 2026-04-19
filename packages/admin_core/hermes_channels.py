@@ -4,6 +4,8 @@ from pathlib import Path
 
 import yaml
 
+from admin_core.hermes_effective import get_bound_source_dir, merge_dicts
+
 
 _KNOWN_CHANNELS = [
     "feishu", "telegram", "slack", "discord", "api_server",
@@ -118,6 +120,15 @@ def _platform_config_from_yaml(cfg: dict, platform: str) -> dict:
     return {}
 
 
+def _read_yaml_cfg(profile_dir: Path) -> dict:
+    config_path = profile_dir / "config.yaml"
+    yaml_cfg: dict = {}
+    if config_path.exists():
+        with open(config_path, "r") as f:
+            yaml_cfg = yaml.safe_load(f) or {}
+    return yaml_cfg
+
+
 def _parse_profile_env(profile_dir: Path) -> dict[str, str]:
     env_path = profile_dir / ".env"
     if not env_path.exists():
@@ -219,14 +230,7 @@ def _platform_config_from_env(profile_env: dict[str, str], platform: str) -> dic
     return result
 
 
-def get_channel_snapshot(profile_dir: Path, channel_id: str) -> dict:
-    config_path = profile_dir / "config.yaml"
-    yaml_cfg: dict = {}
-    if config_path.exists():
-        with open(config_path, "r") as f:
-            yaml_cfg = yaml.safe_load(f) or {}
-
-    profile_env = _parse_profile_env(profile_dir)
+def _get_channel_snapshot_from_parts(yaml_cfg: dict, profile_env: dict[str, str], channel_id: str) -> dict:
     yaml_config = _platform_config_from_yaml(yaml_cfg, channel_id)
     env_config = _platform_config_from_env(profile_env, channel_id)
 
@@ -279,6 +283,28 @@ def get_channel_snapshot(profile_dir: Path, channel_id: str) -> dict:
         "channel_id": channel_id,
         "enabled": enabled,
         "configured": configured,
+        "config": merged_config,
+    }
+
+
+def get_channel_snapshot(profile_dir: Path, channel_id: str) -> dict:
+    yaml_cfg = _read_yaml_cfg(profile_dir)
+    profile_env = _parse_profile_env(profile_dir)
+
+    source_dir = get_bound_source_dir(profile_dir.name)
+    if not source_dir:
+        return _get_channel_snapshot_from_parts(yaml_cfg, profile_env, channel_id)
+
+    base_yaml = _read_yaml_cfg(source_dir)
+    base_env = _parse_profile_env(source_dir)
+    base_snapshot = _get_channel_snapshot_from_parts(base_yaml, base_env, channel_id)
+    current_snapshot = _get_channel_snapshot_from_parts(yaml_cfg, profile_env, channel_id)
+
+    merged_config = merge_dicts(base_snapshot.get("config") or {}, current_snapshot.get("config") or {})
+    return {
+        "channel_id": channel_id,
+        "enabled": bool(base_snapshot.get("enabled") or current_snapshot.get("enabled")),
+        "configured": bool(base_snapshot.get("configured") or current_snapshot.get("configured")),
         "config": merged_config,
     }
 
