@@ -78,6 +78,12 @@ export interface ConfigSourceCreateRequest {
   note?: string | null
 }
 
+export interface ConfigSourceUpdateRequest {
+  backing_profile?: string | null
+  display_name?: string | null
+  note?: string | null
+}
+
 export interface WorkspaceFileEntry {
   path: string
   kind: 'file' | 'dir'

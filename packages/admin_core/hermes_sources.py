@@ -61,6 +61,43 @@ def create_config_source(
     )
 
 
+def update_config_source(
+    source_id: str,
+    backing_profile: str | None = None,
+    display_name: str | None = None,
+    note: str | None = None,
+    db_path: Path | None = None,
+) -> ConfigSourceItem:
+    if backing_profile:
+        from admin_core.hermes_profiles import profile_exists
+        if not profile_exists(backing_profile):
+            raise FileNotFoundError(f"Profile '{backing_profile}' does not exist")
+    path = init_registry(db_path)
+    now = _now()
+    with sqlite3.connect(path) as conn:
+        cur = conn.execute(
+            "select id, name, kind from config_sources where id=?",
+            (source_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise FileNotFoundError(f"Config source '{source_id}' not found")
+        conn.execute(
+            """
+            update config_sources
+            set backing_profile=?, display_name=?, note=?, updated_at=?
+            where id=?
+            """,
+            (backing_profile, display_name, note, now, source_id),
+        )
+        conn.commit()
+    items = list_config_sources(path)
+    for item in items:
+        if item.id == source_id:
+            return item
+    raise FileNotFoundError(f"Config source '{source_id}' not found")
+
+
 def list_config_sources(db_path: Path | None = None) -> list[ConfigSourceItem]:
     path = init_registry(db_path)
     with sqlite3.connect(path) as conn:

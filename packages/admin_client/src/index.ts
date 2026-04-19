@@ -27,6 +27,7 @@ import type {
   ConfigBackupItem,
   ConfigSourceItem,
   ConfigSourceCreateRequest,
+  ConfigSourceUpdateRequest,
   ProfileBindingItem,
   ProfileBindingUpdateRequest,
   ChannelOverviewItem,
@@ -249,6 +250,13 @@ export class HermesAdminClient {
   async createConfigSource(body: ConfigSourceCreateRequest): Promise<ConfigSourceItem> {
     return request(`${BASE}/config-sources`, {
       method: 'POST',
+      body: JSON.stringify(body),
+    })
+  }
+
+  async updateConfigSource(sourceId: string, body: ConfigSourceUpdateRequest): Promise<ConfigSourceItem> {
+    return request(`${BASE}/config-sources/${encodeURIComponent(sourceId)}`, {
+      method: 'PUT',
       body: JSON.stringify(body),
     })
   }

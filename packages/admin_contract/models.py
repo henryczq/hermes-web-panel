@@ -86,6 +86,12 @@ class ConfigSourceCreateRequest(BaseModel):
     note: str | None = None
 
 
+class ConfigSourceUpdateRequest(BaseModel):
+    backing_profile: str | None = None
+    display_name: str | None = None
+    note: str | None = None
+
+
 class HermesWorkspaceFileEntry(BaseModel):
     path: str
     kind: str

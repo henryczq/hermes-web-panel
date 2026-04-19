@@ -1,4 +1,4 @@
-import { Button, Card, Empty, Select, Space, Table, Tag, Typography } from 'antd'
+import { Alert, Button, Card, Empty, Space, Table, Tabs, Tag, Typography } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { useMemo, useState } from 'react'
 import { useHermesClient } from 'hermes_web_panel_client'
@@ -7,30 +7,45 @@ import type { ChannelOverviewItem } from 'hermes_web_panel_contract'
 
 const { Title, Text } = Typography
 
+const CHANNEL_TABS = [
+  'feishu',
+  'dingtalk',
+  'qq',
+  'weixin',
+  'weixin_mp',
+  'wecom_bot',
+  'wecom_app',
+  'wecom_kf',
+  'telegram',
+] as const
+
 function channelLabel(channelId: string): string {
-  if (channelId === '-') return '未配置渠道'
-  return channelId
+  const labels: Record<string, string> = {
+    feishu: '飞书',
+    dingtalk: '钉钉',
+    qq: 'QQ',
+    weixin: '微信',
+    weixin_mp: '微信公众号',
+    wecom_bot: '企微机器人',
+    wecom_app: '企微应用',
+    wecom_kf: '企微客服',
+    telegram: 'Telegram',
+  }
+  return labels[channelId] || channelId
 }
 
 export default function ChannelsPage() {
   const client = useHermesClient()
-  const [selectedChannel, setSelectedChannel] = useState<string>()
+  const [activeTab, setActiveTab] = useState<string>('feishu')
 
   const { data, loading, reload } = useAsyncData<ChannelOverviewItem[]>(
     () => client.getChannelsOverview(),
     [],
   )
 
-  const channelOptions = useMemo(() => {
-    const ids = Array.from(new Set((data || []).map((item) => item.channel_id)))
-    return ids.map((id) => ({ value: id, label: channelLabel(id) }))
-  }, [data])
-
   const filtered = useMemo(() => {
-    if (!data) return []
-    if (!selectedChannel) return data
-    return data.filter((item) => item.channel_id === selectedChannel)
-  }, [data, selectedChannel])
+    return (data || []).filter((item) => item.channel_id === activeTab)
+  }, [data, activeTab])
 
   const columns = [
     {
@@ -67,39 +82,49 @@ export default function ChannelsPage() {
     },
   ]
 
+  const tabItems = CHANNEL_TABS.map((channelId) => ({
+    key: channelId,
+    label: channelLabel(channelId),
+    children: (
+      <div>
+        <Card style={{ marginBottom: 16 }}>
+          <Text type="secondary">
+            当前渠道：{channelLabel(channelId)}。这里展示已经配置这个渠道的相关档案，以及它们是独立配置还是继承某个共享配置源。
+          </Text>
+          {channelId === 'feishu' && (
+            <Alert
+              style={{ marginTop: 12 }}
+              type="info"
+              showIcon
+              message="飞书扫码登录 / 测试绑定能力需保留，后续会继续在这个 Tab 内整合回原有入口。"
+            />
+          )}
+        </Card>
+
+        <Card>
+          <Table
+            rowKey={(row) => `${row.profile_name}:${row.channel_id}`}
+            dataSource={filtered}
+            columns={columns}
+            loading={loading}
+            pagination={false}
+            locale={{ emptyText: <Empty description={`暂无 ${channelLabel(channelId)} 相关档案`} /> }}
+          />
+        </Card>
+      </div>
+    ),
+  }))
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>渠道总览</Title>
+        <Title level={4} style={{ margin: 0 }}>渠道管理</Title>
         <Space>
-          <Select
-            allowClear
-            style={{ width: 220 }}
-            placeholder="筛选渠道"
-            value={selectedChannel}
-            onChange={setSelectedChannel}
-            options={channelOptions}
-          />
           <Button icon={<ReloadOutlined />} onClick={reload} loading={loading} />
         </Space>
       </div>
 
-      <Card style={{ marginBottom: 16 }}>
-        <Text type="secondary">
-          这里展示每个渠道在各档案中的配置状态，以及该档案当前是独立模式还是继承某个共享配置源。
-        </Text>
-      </Card>
-
-      <Card>
-        <Table
-          rowKey={(row) => `${row.profile_name}:${row.channel_id}`}
-          dataSource={filtered}
-          columns={columns}
-          loading={loading}
-          pagination={false}
-          locale={{ emptyText: <Empty description="暂无渠道概览数据" /> }}
-        />
-      </Card>
+      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
     </div>
   )
 }

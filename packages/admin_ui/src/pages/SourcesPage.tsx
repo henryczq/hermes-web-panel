@@ -1,6 +1,6 @@
-import { Button, Card, Form, Input, Modal, Select, Table, Tag, Typography, message } from 'antd'
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { useState } from 'react'
+import { Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography, message } from 'antd'
+import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { useMemo, useState } from 'react'
 import { useHermesClient } from 'hermes_web_panel_client'
 import { useAsyncData } from '../hooks/useAsyncData.js'
 import type { ConfigSourceItem, HermesProfileSummary } from 'hermes_web_panel_contract'
@@ -10,17 +10,30 @@ const { Title } = Typography
 export default function SourcesPage() {
   const client = useHermesClient()
   const [createOpen, setCreateOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [bindOpen, setBindOpen] = useState(false)
+  const [target, setTarget] = useState<ConfigSourceItem | null>(null)
   const [form] = Form.useForm()
+  const [editForm] = Form.useForm()
+  const [bindForm] = Form.useForm()
 
   const { data, loading, reload } = useAsyncData<ConfigSourceItem[]>(
     () => client.listConfigSources(),
     [],
   )
 
-  const { data: profiles } = useAsyncData<HermesProfileSummary[]>(
+  const { data: profiles, reload: reloadProfiles } = useAsyncData<HermesProfileSummary[]>(
     () => client.listProfiles(),
     [],
   )
+
+  const sourceIdToProfiles = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const item of data || []) {
+      map.set(item.id, item.linked_profiles || [])
+    }
+    return map
+  }, [data])
 
   const handleCreate = async (values: { name: string; backing_profile?: string; display_name?: string; note?: string }) => {
     try {
@@ -36,6 +49,53 @@ export default function SourcesPage() {
       reload()
     } catch (e) {
       message.error(e instanceof Error ? e.message : '创建共享配置失败')
+    }
+  }
+
+  const handleEdit = async (values: { backing_profile?: string; display_name?: string; note?: string }) => {
+    if (!target) return
+    try {
+      await client.updateConfigSource(target.id, {
+        backing_profile: values.backing_profile || null,
+        display_name: values.display_name?.trim() || null,
+        note: values.note?.trim() || null,
+      })
+      message.success('共享配置已更新')
+      setEditOpen(false)
+      setTarget(null)
+      editForm.resetFields()
+      reload()
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '更新共享配置失败')
+    }
+  }
+
+  const handleBindProfiles = async (values: { profile_names: string[] }) => {
+    if (!target) return
+    try {
+      const selected = new Set(values.profile_names || [])
+      const current = new Set(sourceIdToProfiles.get(target.id) || [])
+      const allProfiles = profiles || []
+
+      for (const profile of allProfiles) {
+        const shouldBind = selected.has(profile.name)
+        const isBound = current.has(profile.name)
+        if (shouldBind && !isBound) {
+          await client.updateProfileBinding(profile.name, { mode: 'inherit', source_id: target.id })
+        }
+        if (!shouldBind && isBound) {
+          await client.updateProfileBinding(profile.name, { mode: 'standalone', source_id: null })
+        }
+      }
+
+      message.success('关联档案已更新')
+      setBindOpen(false)
+      setTarget(null)
+      bindForm.resetFields()
+      reload()
+      reloadProfiles()
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '更新关联档案失败')
     }
   }
 
@@ -66,6 +126,41 @@ export default function SourcesPage() {
       dataIndex: 'note',
       key: 'note',
       render: (note?: string | null) => note || '-',
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      render: (_: unknown, record: ConfigSourceItem) => (
+        <Space>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setTarget(record)
+              editForm.setFieldsValue({
+                backing_profile: record.backing_profile || undefined,
+                display_name: record.display_name || '',
+                note: record.note || '',
+              })
+              setEditOpen(true)
+            }}
+          >
+            编辑
+          </Button>
+          <Button
+            size="small"
+            onClick={() => {
+              setTarget(record)
+              bindForm.setFieldsValue({
+                profile_names: sourceIdToProfiles.get(record.id) || [],
+              })
+              setBindOpen(true)
+            }}
+          >
+            管理档案
+          </Button>
+        </Space>
+      ),
     },
   ]
 
@@ -105,6 +200,45 @@ export default function SourcesPage() {
           </Form.Item>
           <Form.Item name="note" label="备注">
             <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="编辑共享配置"
+        open={editOpen}
+        onCancel={() => { setEditOpen(false); setTarget(null); editForm.resetFields() }}
+        onOk={() => editForm.submit()}
+      >
+        <Form form={editForm} layout="vertical" onFinish={handleEdit}>
+          <Form.Item name="display_name" label="显示名称">
+            <Input />
+          </Form.Item>
+          <Form.Item name="backing_profile" label="承载档案">
+            <Select
+              allowClear
+              options={(profiles || []).map((p) => ({ value: p.name, label: p.display_name || p.name }))}
+            />
+          </Form.Item>
+          <Form.Item name="note" label="备注">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="管理关联档案"
+        open={bindOpen}
+        onCancel={() => { setBindOpen(false); setTarget(null); bindForm.resetFields() }}
+        onOk={() => bindForm.submit()}
+      >
+        <Form form={bindForm} layout="vertical" onFinish={handleBindProfiles}>
+          <Form.Item name="profile_names" label="关联档案">
+            <Select
+              mode="multiple"
+              placeholder="选择要绑定到这个共享配置的档案"
+              options={(profiles || []).map((p) => ({ value: p.name, label: p.display_name || p.name }))}
+            />
           </Form.Item>
         </Form>
       </Modal>
