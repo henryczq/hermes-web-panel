@@ -35,10 +35,17 @@ def create_config_source(
 ) -> ConfigSourceItem:
     source_id = f"source:{name}"
     now = _now()
+    effective_backing_profile = backing_profile or name
+    from admin_core.hermes_profiles import create_profile, profile_exists
     if backing_profile:
-        from admin_core.hermes_profiles import profile_exists
         if not profile_exists(backing_profile):
             raise FileNotFoundError(f"Profile '{backing_profile}' does not exist")
+    elif not profile_exists(effective_backing_profile):
+        create_profile(
+            effective_backing_profile,
+            display_name=display_name or name,
+            note=f"Backing profile for shared config source '{name}'",
+        )
     path = init_registry(db_path)
     with sqlite3.connect(path) as conn:
         _ensure_default_source(conn)
@@ -47,14 +54,14 @@ def create_config_source(
             insert into config_sources (id, name, kind, backing_profile, display_name, note, created_at, updated_at)
             values (?, ?, 'custom', ?, ?, ?, ?, ?)
             """,
-            (source_id, name, backing_profile or name, display_name, note, now, now),
+            (source_id, name, effective_backing_profile, display_name, note, now, now),
         )
         conn.commit()
     return ConfigSourceItem(
         id=source_id,
         name=name,
         kind='custom',
-        backing_profile=backing_profile or name,
+        backing_profile=effective_backing_profile,
         display_name=display_name,
         note=note,
         linked_profiles=[],
@@ -129,3 +136,28 @@ def list_config_sources(db_path: Path | None = None) -> list[ConfigSourceItem]:
         )
         for row in rows
     ]
+
+
+def repair_missing_backing_profiles(db_path: Path | None = None) -> list[dict[str, str]]:
+    from admin_core.hermes_profiles import create_profile, profile_exists
+
+    repaired: list[dict[str, str]] = []
+    for item in list_config_sources(db_path):
+        backing_profile = (item.backing_profile or item.name or "").strip()
+        if not backing_profile:
+            continue
+        if profile_exists(backing_profile):
+            continue
+
+        create_profile(
+            backing_profile,
+            display_name=item.display_name or item.name,
+            note=f"Backing profile repaired for shared config source '{item.name}'",
+        )
+        repaired.append({
+            "source_id": item.id,
+            "source_name": item.name,
+            "backing_profile": backing_profile,
+        })
+
+    return repaired

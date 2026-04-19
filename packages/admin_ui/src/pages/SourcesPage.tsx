@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography, message } from 'antd'
+import { Alert, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography, message } from 'antd'
 import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useMemo, useState } from 'react'
 import { useHermesClient } from 'hermes_web_panel_client'
@@ -186,6 +186,13 @@ export default function SourcesPage() {
         onOk={() => form.submit()}
       >
         <Form form={form} layout="vertical" onFinish={handleCreate}>
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="共享配置需要一个承载档案"
+            description="如果你不手动指定承载档案，系统会自动创建一个与共享配置同名的 backing profile，用来保存该共享配置的 AI、.env 和渠道等实际文件。"
+          />
           <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
             <Input placeholder="例如：china-main / ai-prod" />
           </Form.Item>

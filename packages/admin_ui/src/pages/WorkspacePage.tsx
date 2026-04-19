@@ -10,7 +10,6 @@ import {
   Modal,
   Space,
   Table,
-  Tabs,
   Tag,
   Typography,
   message,
@@ -519,91 +518,88 @@ export default function WorkspacePage() {
                   <Button size="small" icon={<ReloadOutlined />} onClick={reloadFiles} loading={filesLoading} />
                 }
               >
-                <Tabs
-                  items={[
-                    {
-                      key: 'core',
-                      label: '核心文件',
-                      children: (
-                        <List
-                          locale={{ emptyText: <Empty description="暂无核心文件" /> }}
-                          dataSource={coreFiles}
-                          renderItem={(item) => (
-                            <List.Item
-                              style={{
-                                cursor: 'pointer',
-                                paddingInline: 12,
-                                borderRadius: 8,
-                                background: item.path === activeFile ? '#fff7e6' : 'transparent',
-                                marginBottom: 8,
-                              }}
-                              onClick={() => handleSwitchFile(item.path)}
-                            >
-                              <List.Item.Meta
-                                title={<Text strong={item.path === activeFile}>{item.path}</Text>}
-                                description={getFileDescription(item.path)}
-                              />
-                            </List.Item>
-                          )}
-                        />
-                      ),
-                    },
-                    {
-                      key: 'runtime',
-                      label: '运行配置',
-                      children: (
-                        <List
-                          locale={{ emptyText: <Empty description="暂无运行配置文件" /> }}
-                          dataSource={runtimeFiles}
-                          renderItem={(item) => (
-                            <List.Item
-                              style={{
-                                cursor: 'pointer',
-                                paddingInline: 12,
-                                borderRadius: 8,
-                                background: item.path === activeFile ? '#fff7e6' : 'transparent',
-                                marginBottom: 8,
-                              }}
-                              onClick={() => handleSwitchFile(item.path)}
-                            >
-                              <List.Item.Meta
-                                title={<Text strong={item.path === activeFile}>{item.path}</Text>}
-                                description={getFileDescription(item.path)}
-                              />
-                            </List.Item>
-                          )}
-                        />
-                      ),
-                    },
-                    {
-                      key: 'custom',
-                      label: '自定义文档',
-                      children: (
-                        <List
-                          locale={{ emptyText: <Empty description="暂无自定义文档" /> }}
-                          dataSource={customFiles}
-                          renderItem={(item) => (
-                            <List.Item
-                              style={{
-                                cursor: 'pointer',
-                                paddingInline: 12,
-                                borderRadius: 8,
-                                background: item.path === activeFile ? '#fff7e6' : 'transparent',
-                                marginBottom: 8,
-                              }}
-                              onClick={() => handleSwitchFile(item.path)}
-                            >
-                              <List.Item.Meta
-                                title={<Text strong={item.path === activeFile}>{item.path}</Text>}
-                                description={getFileDescription(item.path)}
-                              />
-                            </List.Item>
-                          )}
-                        />
-                      ),
-                    },
-                  ]}
-                />
+                <Space direction="vertical" size={20} style={{ width: '100%' }}>
+                  <div>
+                    <Text strong style={{ display: 'block', marginBottom: 10 }}>
+                      核心文件
+                    </Text>
+                    <List
+                      locale={{ emptyText: <Empty description="暂无核心文件" /> }}
+                      dataSource={coreFiles}
+                      renderItem={(item) => (
+                        <List.Item
+                          style={{
+                            cursor: 'pointer',
+                            paddingInline: 12,
+                            borderRadius: 8,
+                            background: item.path === activeFile ? '#fff7e6' : 'transparent',
+                            marginBottom: 8,
+                          }}
+                          onClick={() => handleSwitchFile(item.path)}
+                        >
+                          <List.Item.Meta
+                            title={<Text strong={item.path === activeFile}>{item.path}</Text>}
+                            description={getFileDescription(item.path)}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  </div>
+
+                  <div>
+                    <Text strong style={{ display: 'block', marginBottom: 10 }}>
+                      运行配置
+                    </Text>
+                    <List
+                      locale={{ emptyText: <Empty description="暂无运行配置文件" /> }}
+                      dataSource={runtimeFiles}
+                      renderItem={(item) => (
+                        <List.Item
+                          style={{
+                            cursor: 'pointer',
+                            paddingInline: 12,
+                            borderRadius: 8,
+                            background: item.path === activeFile ? '#fff7e6' : 'transparent',
+                            marginBottom: 8,
+                          }}
+                          onClick={() => handleSwitchFile(item.path)}
+                        >
+                          <List.Item.Meta
+                            title={<Text strong={item.path === activeFile}>{item.path}</Text>}
+                            description={getFileDescription(item.path)}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  </div>
+
+                  <div>
+                    <Text strong style={{ display: 'block', marginBottom: 10 }}>
+                      自定义文档
+                    </Text>
+                    <List
+                      locale={{ emptyText: <Empty description="暂无自定义文档" /> }}
+                      dataSource={customFiles}
+                      renderItem={(item) => (
+                        <List.Item
+                          style={{
+                            cursor: 'pointer',
+                            paddingInline: 12,
+                            borderRadius: 8,
+                            background: item.path === activeFile ? '#fff7e6' : 'transparent',
+                            marginBottom: 8,
+                          }}
+                          onClick={() => handleSwitchFile(item.path)}
+                        >
+                          <List.Item.Meta
+                            title={<Text strong={item.path === activeFile}>{item.path}</Text>}
+                            description={getFileDescription(item.path)}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  </div>
+                </Space>
               </Card>
 
               <Space direction="vertical" size={16} style={{ width: '100%' }}>
