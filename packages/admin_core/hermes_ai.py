@@ -4,8 +4,10 @@ from pathlib import Path
 
 import yaml
 
+from admin_core.hermes_effective import get_bound_source_dir, merge_dicts
 
-def read_ai_config(profile_dir: Path) -> dict:
+
+def _read_ai_config_from_dir(profile_dir: Path) -> dict:
     config_path = profile_dir / "config.yaml"
     if not config_path.exists():
         return {}
@@ -26,6 +28,15 @@ def read_ai_config(profile_dir: Path) -> dict:
         "fallback_providers": cfg.get("fallback_providers", []),
     }
     return result
+
+
+def read_ai_config(profile_dir: Path) -> dict:
+    current = _read_ai_config_from_dir(profile_dir)
+    source_dir = get_bound_source_dir(profile_dir.name)
+    if not source_dir:
+        return current
+    base = _read_ai_config_from_dir(source_dir)
+    return merge_dicts(base, current)
 
 
 def write_ai_config(profile_dir: Path, ai_data: dict) -> None:

@@ -71,6 +71,13 @@ export interface AiOverviewItem {
   provider?: string | null
 }
 
+export interface ConfigSourceCreateRequest {
+  name: string
+  backing_profile?: string | null
+  display_name?: string | null
+  note?: string | null
+}
+
 export interface WorkspaceFileEntry {
   path: string
   kind: 'file' | 'dir'

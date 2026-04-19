@@ -79,6 +79,13 @@ class AiOverviewItem(BaseModel):
     provider: str | None = None
 
 
+class ConfigSourceCreateRequest(BaseModel):
+    name: str
+    backing_profile: str | None = None
+    display_name: str | None = None
+    note: str | None = None
+
+
 class HermesWorkspaceFileEntry(BaseModel):
     path: str
     kind: str

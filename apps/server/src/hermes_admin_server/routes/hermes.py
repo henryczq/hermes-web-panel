@@ -18,6 +18,7 @@ from admin_contract.models import (
     ChannelUpdateRequest,
     WorkspaceFileUpdateRequest,
     ProfileBindingUpdateRequest,
+    ConfigSourceCreateRequest,
 )
 from admin_core.hermes_profiles import (
     list_profile_summaries,
@@ -72,7 +73,7 @@ from admin_core.hermes_onboarding import (
     apply_onboard_session,
 )
 from admin_core.shared_china_registry import get_china_channels_bundle
-from admin_core.hermes_sources import list_config_sources
+from admin_core.hermes_sources import list_config_sources, create_config_source
 from admin_core.hermes_bindings import list_profile_bindings, set_profile_binding
 from admin_core.hermes_overview import list_channels_overview, list_ai_overview
 
@@ -123,6 +124,22 @@ def profiles_create(body: ProfileCreateRequest):
 def config_sources_list():
     items = list_config_sources()
     return ApiEnvelope(success=True, data=[item.model_dump() for item in items])
+
+
+@router.post("/api/hermes/config-sources")
+def config_sources_create(body: ConfigSourceCreateRequest):
+    try:
+        item = create_config_source(
+            body.name,
+            backing_profile=body.backing_profile,
+            display_name=body.display_name,
+            note=body.note,
+        )
+        return ApiEnvelope(success=True, data=item.model_dump())
+    except FileNotFoundError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
 
 
 @router.get("/api/hermes/profile-bindings")
