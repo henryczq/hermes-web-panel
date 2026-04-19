@@ -163,6 +163,7 @@ class AIConfigResponse(BaseModel):
     default_model: str | None = None
     provider: str | None = None
     base_url: str | None = None
+    embedding: dict | None = None
     auxiliary: dict | None = None
     providers: dict | None = None
     fallback_providers: list = []
@@ -172,6 +173,7 @@ class AIConfigUpdateRequest(BaseModel):
     default_model: str | None = None
     provider: str | None = None
     base_url: str | None = None
+    embedding: dict | None = None
     auxiliary: dict | None = None
     providers: dict | None = None
     fallback_providers: list | None = None
@@ -268,3 +270,20 @@ class WorkspaceFileResponse(BaseModel):
 class WorkspaceFileUpdateRequest(BaseModel):
     path: str
     content: str
+
+
+class WorkspaceFileBackupRequest(BaseModel):
+    path: str
+
+
+class WorkspaceFileRestoreRequest(BaseModel):
+    path: str
+    backup_filename: str
+
+
+class WorkspaceFileBackupItem(BaseModel):
+    filename: str
+    path: str
+    target_path: str
+    size: int
+    modified: float

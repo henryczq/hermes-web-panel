@@ -17,6 +17,8 @@ from admin_contract.models import (
     OpenClawImportRequest,
     ChannelUpdateRequest,
     WorkspaceFileUpdateRequest,
+    WorkspaceFileBackupRequest,
+    WorkspaceFileRestoreRequest,
     ProfileBindingUpdateRequest,
     ConfigSourceCreateRequest,
     ConfigSourceUpdateRequest,
@@ -67,6 +69,9 @@ from admin_core.hermes_workspace import (
     list_files,
     read_file,
     write_file,
+    backup_file,
+    list_file_backups,
+    restore_file_backup,
 )
 from admin_core.hermes_onboarding import (
     start_onboard_session,
@@ -602,4 +607,40 @@ def workspace_file_write(name: str, body: WorkspaceFileUpdateRequest):
         write_file(profile_dir, body.path, body.content)
         return ApiEnvelope(success=True, data={"profile_name": name, "path": body.path})
     except (ValueError, OSError) as e:
+        return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
+
+
+@router.post("/api/hermes/profiles/{name}/workspace/file/backup")
+def workspace_file_backup(name: str, body: WorkspaceFileBackupRequest):
+    profile_dir, err = _resolve_profile(name)
+    if err:
+        return err
+    try:
+        path = backup_file(profile_dir, body.path)
+        return ApiEnvelope(success=True, data={"profile_name": name, "path": body.path, "backup_path": path})
+    except (ValueError, FileNotFoundError, OSError) as e:
+        return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
+
+
+@router.get("/api/hermes/profiles/{name}/workspace/file/backups")
+def workspace_file_backups(name: str, file_path: str):
+    profile_dir, err = _resolve_profile(name)
+    if err:
+        return err
+    try:
+        items = list_file_backups(profile_dir, file_path)
+        return ApiEnvelope(success=True, data=items)
+    except (ValueError, OSError) as e:
+        return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
+
+
+@router.post("/api/hermes/profiles/{name}/workspace/file/restore")
+def workspace_file_restore(name: str, body: WorkspaceFileRestoreRequest):
+    profile_dir, err = _resolve_profile(name)
+    if err:
+        return err
+    try:
+        path = restore_file_backup(profile_dir, body.path, body.backup_filename)
+        return ApiEnvelope(success=True, data={"profile_name": name, "path": body.path, "restored_from": path})
+    except (ValueError, FileNotFoundError, OSError) as e:
         return JSONResponse(status_code=400, content={"success": False, "error": str(e)})

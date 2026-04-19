@@ -25,6 +25,7 @@ import type {
   WorkspaceFileResponse,
   WorkspaceFileUpdateRequest,
   ConfigBackupItem,
+  WorkspaceFileBackupItem,
   ConfigSourceItem,
   ConfigSourceCreateRequest,
   ConfigSourceUpdateRequest,
@@ -342,6 +343,42 @@ export class HermesAdminClient {
       {
         method: 'PUT',
         body: JSON.stringify(body),
+      },
+    )
+  }
+
+  async backupWorkspaceFile(
+    name: string,
+    path: string,
+  ): Promise<{ profile_name: string; path: string; backup_path: string }> {
+    return request(
+      `${BASE}/profiles/${encodeURIComponent(name)}/workspace/file/backup`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ path }),
+      },
+    )
+  }
+
+  async listWorkspaceFileBackups(
+    name: string,
+    path: string,
+  ): Promise<WorkspaceFileBackupItem[]> {
+    return request(
+      `${BASE}/profiles/${encodeURIComponent(name)}/workspace/file/backups?file_path=${encodeURIComponent(path)}`,
+    )
+  }
+
+  async restoreWorkspaceFileBackup(
+    name: string,
+    path: string,
+    backupFilename: string,
+  ): Promise<{ profile_name: string; path: string; restored_from: string }> {
+    return request(
+      `${BASE}/profiles/${encodeURIComponent(name)}/workspace/file/restore`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ path, backup_filename: backupFilename }),
       },
     )
   }

@@ -23,6 +23,7 @@ def _read_ai_config_from_dir(profile_dir: Path) -> dict:
                           if isinstance(model_cfg, dict) else None),
         "provider": model_cfg.get("provider") if isinstance(model_cfg, dict) else None,
         "base_url": model_cfg.get("base_url") if isinstance(model_cfg, dict) else None,
+        "embedding": cfg.get("embedding"),
         "auxiliary": cfg.get("auxiliary"),
         "providers": cfg.get("providers"),
         "fallback_providers": cfg.get("fallback_providers", []),
@@ -61,6 +62,12 @@ def write_ai_config(profile_dir: Path, ai_data: dict) -> None:
         model_cfg["base_url"] = ai_data["base_url"]
 
     cfg["model"] = model_cfg
+
+    if "embedding" in ai_data:
+        if ai_data["embedding"] is not None:
+            cfg["embedding"] = ai_data["embedding"]
+        else:
+            cfg.pop("embedding", None)
 
     if "auxiliary" in ai_data:
         if ai_data["auxiliary"] is not None:

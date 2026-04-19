@@ -147,6 +147,7 @@ export interface AIConfigResponse {
   default_model?: string | null
   provider?: string | null
   base_url?: string | null
+  embedding?: Record<string, unknown> | null
   auxiliary?: Record<string, unknown> | null
   providers?: Record<string, unknown> | null
   fallback_providers?: unknown[]
@@ -156,6 +157,7 @@ export interface AIConfigUpdateRequest {
   default_model?: string | null
   provider?: string | null
   base_url?: string | null
+  embedding?: Record<string, unknown> | null
   auxiliary?: Record<string, unknown> | null
   providers?: Record<string, unknown> | null
   fallback_providers?: unknown[] | null
@@ -290,6 +292,23 @@ export interface WorkspaceFileResponse {
 export interface WorkspaceFileUpdateRequest {
   path: string
   content: string
+}
+
+export interface WorkspaceFileBackupRequest {
+  path: string
+}
+
+export interface WorkspaceFileRestoreRequest {
+  path: string
+  backup_filename: string
+}
+
+export interface WorkspaceFileBackupItem {
+  filename: string
+  path: string
+  target_path: string
+  size: number
+  modified: number
 }
 
 export interface ConfigBackupItem {

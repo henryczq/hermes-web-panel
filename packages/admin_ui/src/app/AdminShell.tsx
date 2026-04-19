@@ -3,6 +3,7 @@ import { Layout, Menu, Drawer, Button, Space, Grid } from 'antd'
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
 import type { MenuKey } from './admin-menu.config'
 import { menuDefs } from './admin-menu.config'
+import ProfileSelector from '../components/shared/ProfileSelector'
 const { Sider, Content, Header } = Layout
 
 interface AdminShellProps {
@@ -80,6 +81,7 @@ export default function AdminShell({ activeMenu, onMenuChange, children }: Admin
             )}
             {headerContent}
           </Space>
+          <ProfileSelector />
         </Header>
         <Content
           style={{

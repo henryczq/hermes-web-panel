@@ -6,7 +6,7 @@ import {
   SettingOutlined,
 } from '@ant-design/icons'
 
-export type MenuKey = 'profiles' | 'sources' | 'channels' | 'ai' | 'workspace' | 'config'
+export type MenuKey = 'profiles' | 'sources' | 'channels' | 'ai' | 'workspace'
 
 export interface MenuItemDef {
   key: MenuKey
@@ -19,8 +19,7 @@ export const menuDefs: MenuItemDef[] = [
   { key: 'sources', icon: SettingOutlined, label: '共享配置' },
   { key: 'channels', icon: LinkOutlined, label: '渠道' },
   { key: 'ai', icon: RobotOutlined, label: 'AI' },
-  { key: 'workspace', icon: FolderOutlined, label: '工作区' },
-  { key: 'config', icon: SettingOutlined, label: '高级配置' },
+  { key: 'workspace', icon: FolderOutlined, label: '档案文件' },
 ]
 
 export const menuLabels: Record<MenuKey, string> = {
@@ -28,6 +27,5 @@ export const menuLabels: Record<MenuKey, string> = {
   sources: '共享配置',
   channels: '渠道',
   ai: 'AI',
-  workspace: '工作区',
-  config: '高级配置',
+  workspace: '档案文件',
 }

@@ -1,5 +1,7 @@
-"""Workspace file tree, read, and write with path whitelist."""
+"""Workspace file tree, read, write, and backup for profile-scoped files."""
 from pathlib import Path
+import shutil
+from datetime import datetime
 
 _EDITABLE_FILES = {
     "SOUL.md",
@@ -9,6 +11,11 @@ _EDITABLE_FILES = {
     "config.yaml",
     ".env",
 }
+
+_EDITABLE_SUFFIXES = {".md", ".txt"}
+_EDITABLE_YAML_JSON_FILES = {"config.yaml", "config.yml", "settings.yaml", "settings.yml", "profile.json"}
+_EDITABLE_DIRS = {"docs", "notes", "prompts", "knowledge"}
+_BLOCKED_PARTS = {"__pycache__", ".git", "node_modules", ".admin_backups", "sessions", "logs", "cache"}
 
 _MAX_EDITABLE_SIZE = 500 * 1024  # 500KB
 
@@ -27,12 +34,28 @@ def _is_editable(path: Path, profile_dir: Path) -> bool:
             return False
         rel = abs_path.relative_to(abs_root)
         parts = rel.parts
-        for skip in ("__pycache__", ".git", "node_modules", ".admin_backups"):
-            if skip in parts:
-                return False
+        if any(part in _BLOCKED_PARTS for part in parts):
+            return False
         if abs_path.is_file() and abs_path.stat().st_size > _MAX_EDITABLE_SIZE:
             return False
-        return path.name in _EDITABLE_FILES
+        if not abs_path.is_file():
+            return False
+
+        if path.name in _EDITABLE_FILES:
+            return True
+
+        suffix = path.suffix.lower()
+        if len(parts) == 1:
+            if suffix in _EDITABLE_SUFFIXES:
+                return True
+            if path.name in _EDITABLE_YAML_JSON_FILES:
+                return True
+            return False
+
+        if parts[0] in _EDITABLE_DIRS and suffix in _EDITABLE_SUFFIXES:
+            return True
+
+        return False
     except (ValueError, OSError):
         return False
 
@@ -100,3 +123,61 @@ def write_file(profile_dir: Path, file_path: str, content: str) -> None:
     tmp = abs_target.with_suffix(abs_target.suffix + ".tmp")
     tmp.write_text(content, encoding="utf-8")
     tmp.replace(abs_target)
+
+
+def _workspace_backup_dir(profile_dir: Path, file_path: str) -> Path:
+    safe_name = file_path.replace("/", "__")
+    bdir = profile_dir / ".admin_backups" / "workspace" / safe_name
+    bdir.mkdir(parents=True, exist_ok=True)
+    return bdir
+
+
+def backup_file(profile_dir: Path, file_path: str) -> str:
+    root = _workspace_root(profile_dir)
+    target = (root / file_path).resolve()
+    abs_root = root.resolve()
+    if not str(target).startswith(str(abs_root)):
+        raise ValueError("Path outside profile directory")
+    if not target.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+    if not target.is_file():
+        raise ValueError("Not a file")
+    if not _is_editable(target, root):
+        raise ValueError(f"File not editable: {file_path}")
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dest = _workspace_backup_dir(profile_dir, file_path) / f"{ts}_{target.name}"
+    shutil.copy2(target, dest)
+    return str(dest)
+
+
+def list_file_backups(profile_dir: Path, file_path: str) -> list[dict]:
+    bdir = _workspace_backup_dir(profile_dir, file_path)
+    items: list[dict] = []
+    for backup in sorted(bdir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+        if not backup.is_file():
+            continue
+        items.append({
+            "filename": backup.name,
+            "path": str(backup),
+            "target_path": file_path,
+            "size": backup.stat().st_size,
+            "modified": backup.stat().st_mtime,
+        })
+    return items
+
+
+def restore_file_backup(profile_dir: Path, file_path: str, backup_filename: str) -> str:
+    root = _workspace_root(profile_dir)
+    target = (root / file_path).resolve()
+    abs_root = root.resolve()
+    if not str(target).startswith(str(abs_root)):
+        raise ValueError("Path outside profile directory")
+    if not _is_editable(target, root):
+        raise ValueError(f"File not editable: {file_path}")
+
+    source = _workspace_backup_dir(profile_dir, file_path) / backup_filename
+    if not source.exists():
+        raise FileNotFoundError(f"Backup '{backup_filename}' not found")
+    shutil.copy2(source, target)
+    return str(source)
