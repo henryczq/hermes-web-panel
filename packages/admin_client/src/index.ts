@@ -262,6 +262,12 @@ export class HermesAdminClient {
     })
   }
 
+  async deleteConfigSource(sourceId: string): Promise<{ source_id: string }> {
+    return request(`${BASE}/config-sources/${encodeURIComponent(sourceId)}`, {
+      method: 'DELETE',
+    })
+  }
+
   async listProfileBindings(): Promise<ProfileBindingItem[]> {
     return request(`${BASE}/profile-bindings`)
   }

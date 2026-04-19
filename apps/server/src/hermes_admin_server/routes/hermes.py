@@ -79,7 +79,12 @@ from admin_core.hermes_onboarding import (
     apply_onboard_session,
 )
 from admin_core.shared_china_registry import get_china_channels_bundle
-from admin_core.hermes_sources import list_config_sources, create_config_source, update_config_source
+from admin_core.hermes_sources import (
+    list_config_sources,
+    create_config_source,
+    update_config_source,
+    delete_config_source,
+)
 from admin_core.hermes_bindings import list_profile_bindings, set_profile_binding
 from admin_core.hermes_overview import list_channels_overview, list_ai_overview
 
@@ -153,14 +158,28 @@ def config_sources_update(source_id: str, body: ConfigSourceUpdateRequest):
     try:
         item = update_config_source(
             source_id,
+            name=body.name,
             backing_profile=body.backing_profile,
             display_name=body.display_name,
             note=body.note,
         )
         return ApiEnvelope(success=True, data=item.model_dump())
+    except FileExistsError as e:
+        return JSONResponse(status_code=409, content={"success": False, "error": str(e)})
     except FileNotFoundError as e:
         return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
     except Exception as e:
+        return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
+
+
+@router.delete("/api/hermes/config-sources/{source_id}")
+def config_sources_delete(source_id: str):
+    try:
+        delete_config_source(source_id)
+        return ApiEnvelope(success=True, data={"source_id": source_id})
+    except FileNotFoundError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+    except ValueError as e:
         return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
 
 

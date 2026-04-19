@@ -79,6 +79,7 @@ export interface ConfigSourceCreateRequest {
 }
 
 export interface ConfigSourceUpdateRequest {
+  name?: string | null
   backing_profile?: string | null
   display_name?: string | null
   note?: string | null

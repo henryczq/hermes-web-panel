@@ -87,6 +87,7 @@ class ConfigSourceCreateRequest(BaseModel):
 
 
 class ConfigSourceUpdateRequest(BaseModel):
+    name: str | None = None
     backing_profile: str | None = None
     display_name: str | None = None
     note: str | None = None

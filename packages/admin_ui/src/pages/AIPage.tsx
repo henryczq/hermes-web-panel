@@ -133,6 +133,31 @@ function pickCustomProviderModel(models: Record<string, unknown> | null | undefi
   return keys.length > 0 ? keys[0] : null
 }
 
+function buildProbeUrls(baseUrl: string, apiMode?: string | null): string[] {
+  const normalized = (baseUrl || '').trim().replace(/\/+$/, '')
+  if (!normalized) {
+    return []
+  }
+
+  let endpoint = 'chat/completions'
+  if (apiMode === 'responses') {
+    endpoint = 'responses'
+  } else if (apiMode === 'anthropic_messages') {
+    endpoint = 'messages'
+  }
+
+  if (normalized.endsWith(`/${endpoint}`)) {
+    return [normalized]
+  }
+
+  const candidates = [`${normalized}/${endpoint}`]
+  if (!normalized.includes('/v1') && apiMode !== 'anthropic_messages') {
+    candidates.push(`${normalized}/v1/${endpoint}`)
+  }
+
+  return [...new Set(candidates)]
+}
+
 export default function AIPage() {
   const client = useHermesClient()
   const [form] = Form.useForm()
@@ -144,6 +169,11 @@ export default function AIPage() {
   const [editingCustomName, setEditingCustomName] = useState<string | null>(null)
   const [customSaving, setCustomSaving] = useState(false)
   const [customTesting, setCustomTesting] = useState(false)
+  const [customTestResult, setCustomTestResult] = useState<{
+    success: boolean
+    message: string
+    details?: Record<string, unknown> | null
+  } | null>(null)
   const [selectedAiSource, setSelectedAiSource] = useState<string | undefined>(undefined)
   const [importModalOpen, setImportModalOpen] = useState(false)
   const [importLoading, setImportLoading] = useState(false)
@@ -330,11 +360,13 @@ export default function AIPage() {
   }) => {
     setCustomModalOpen(true)
     setEditingCustomName(provider?.name || null)
+    setCustomTestResult(null)
     customForm.setFieldsValue({
       name: provider?.name || '',
       base_url: provider?.base_url || '',
       api_key: provider?.api_key || '',
       api_mode: provider?.api_mode || '',
+      test_model_id: pickCustomProviderModel(provider?.models || null) || '',
       models_json: jsonText(provider?.models),
     })
   }
@@ -354,6 +386,7 @@ export default function AIPage() {
       message.success(editingCustomName ? '自定义模型已更新' : '自定义模型已新增')
       setCustomModalOpen(false)
       setEditingCustomName(null)
+      setCustomTestResult(null)
       customForm.resetFields()
       reloadCustomProviders()
     } catch (e) {
@@ -369,15 +402,14 @@ export default function AIPage() {
     if (!backingProfile) return
     try {
       setCustomTesting(true)
-      const values = await customForm.validateFields(['base_url', 'api_key', 'api_mode', 'models_json'])
-      const models = parseJsonObject(values.models_json || '', '模型配置')
-      const model = pickCustomProviderModel(models)
+      const values = await customForm.validateFields(['base_url', 'api_key', 'api_mode', 'test_model_id'])
       const result = await client.testCustomProvider(backingProfile, {
         base_url: values.base_url.trim(),
         api_key: values.api_key?.trim() || null,
         api_mode: values.api_mode?.trim() || null,
-        model,
+        model: values.test_model_id?.trim() || null,
       })
+      setCustomTestResult(result)
       if (result.success) {
         message.success(result.message)
       } else {
@@ -385,6 +417,11 @@ export default function AIPage() {
       }
     } catch (e) {
       if (e instanceof Error) {
+        setCustomTestResult({
+          success: false,
+          message: e.message,
+          details: null,
+        })
         message.error(e.message)
       }
     } finally {
@@ -517,6 +554,12 @@ export default function AIPage() {
   ]
 
   const currentAiSourceOption = aiSourceOptions.find((item) => item.value === selectedAiSource)
+  const customBaseUrl = Form.useWatch('base_url', customForm)
+  const customApiMode = Form.useWatch('api_mode', customForm)
+  const customProbeUrls = useMemo(
+    () => buildProbeUrls(customBaseUrl || '', customApiMode || null),
+    [customApiMode, customBaseUrl],
+  )
 
   return (
     <div>
@@ -713,12 +756,14 @@ export default function AIPage() {
         onCancel={() => {
           setCustomModalOpen(false)
           setEditingCustomName(null)
+          setCustomTestResult(null)
           customForm.resetFields()
         }}
         footer={[
           <Button key="cancel" onClick={() => {
             setCustomModalOpen(false)
             setEditingCustomName(null)
+            setCustomTestResult(null)
             customForm.resetFields()
           }}>
             取消
@@ -732,19 +777,64 @@ export default function AIPage() {
         ]}
       >
         <Form form={customForm} layout="vertical">
+          {customTestResult ? (
+            <Alert
+              type={customTestResult.success ? 'success' : 'error'}
+              showIcon
+              style={{ marginBottom: 16 }}
+              message={customTestResult.message || (customTestResult.success ? '测试成功' : '测试失败')}
+              description={
+                customTestResult.details ? (
+                  <Input.TextArea
+                    readOnly
+                    value={JSON.stringify(customTestResult.details, null, 2)}
+                    autoSize={{ minRows: 6, maxRows: 12 }}
+                    style={{ fontFamily: 'monospace', marginTop: 8 }}
+                  />
+                ) : undefined
+              }
+            />
+          ) : null}
           <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
             <Input placeholder="例如：local / work / proxy" disabled={!!editingCustomName} />
           </Form.Item>
           <Form.Item name="base_url" label="基础 URL" rules={[{ required: true, message: '请输入基础 URL' }]}>
             <Input placeholder="例如：http://localhost:8080/v1" />
           </Form.Item>
+          {customProbeUrls.length > 0 ? (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message="测试连通性将按以下 URL 进行探测"
+              description={
+                <Input.TextArea
+                  readOnly
+                  value={customProbeUrls.join('\n')}
+                  autoSize={{ minRows: 2, maxRows: 4 }}
+                  style={{ fontFamily: 'monospace', marginTop: 8 }}
+                />
+              }
+            />
+          ) : null}
           <Form.Item name="api_key" label="API Key">
             <Input.Password placeholder="无鉴权服务可留空" />
           </Form.Item>
           <Form.Item name="api_mode" label="API 模式">
-            <Input placeholder="例如：chat_completions / responses / anthropic_messages" />
+            <Select
+              allowClear
+              placeholder="留空表示自动识别"
+              options={[
+                { value: 'chat_completions', label: 'chat_completions' },
+                { value: 'responses', label: 'responses' },
+                { value: 'anthropic_messages', label: 'anthropic_messages' },
+              ]}
+            />
           </Form.Item>
-          <Form.Item name="models_json" label="模型配置（JSON）">
+          <Form.Item name="test_model_id" label="测试模型 ID">
+            <Input placeholder="例如：gpt-5.4" />
+          </Form.Item>
+          <Form.Item name="models_json" label="高级模型配置（可选 JSON）">
             <Input.TextArea rows={8} style={{ fontFamily: 'monospace' }} />
           </Form.Item>
         </Form>

@@ -39,6 +39,14 @@ const { TextArea } = Input
 const CORE_FILES = ['SOUL.md', 'MEMORY.md', 'USER.md', 'AGENTS.md'] as const
 const RUNTIME_FILES = ['config.yaml', '.env'] as const
 
+interface DisplayFileItem {
+  path: string
+  kind: 'file'
+  editable: boolean
+  size?: number | null
+  exists: boolean
+}
+
 function getProfileLabel(profile: HermesProfileSummary): string {
   return profile.display_name?.trim() || (profile.name === 'default' ? '主配置' : profile.name)
 }
@@ -139,16 +147,32 @@ export default function WorkspacePage() {
     })
   }, [files])
 
-  const coreFiles = useMemo(
-    () => editableFiles.filter((entry) => getFileGroup(entry.path) === 'core'),
+  const coreFiles = useMemo<DisplayFileItem[]>(
+    () =>
+      CORE_FILES.map((path) => {
+        const existing = editableFiles.find((entry) => entry.path === path)
+        return {
+          path,
+          kind: 'file',
+          editable: existing?.editable ?? false,
+          size: existing?.size ?? null,
+          exists: Boolean(existing),
+        }
+      }),
     [editableFiles],
   )
   const runtimeFiles = useMemo(
-    () => editableFiles.filter((entry) => getFileGroup(entry.path) === 'runtime'),
+    () =>
+      editableFiles
+        .filter((entry) => getFileGroup(entry.path) === 'runtime')
+        .map((entry) => ({ ...entry, exists: true })),
     [editableFiles],
   )
   const customFiles = useMemo(
-    () => editableFiles.filter((entry) => getFileGroup(entry.path) === 'other'),
+    () =>
+      editableFiles
+        .filter((entry) => getFileGroup(entry.path) === 'other')
+        .map((entry) => ({ ...entry, exists: true })),
     [editableFiles],
   )
 
@@ -554,17 +578,22 @@ export default function WorkspacePage() {
                         <button
                           key={item.path}
                           type="button"
-                          onClick={() => handleSwitchFile(item.path)}
+                          onClick={() => item.exists && handleSwitchFile(item.path)}
+                          disabled={!item.exists}
                           style={{
                             textAlign: 'left',
                             border: item.path === activeFile ? '1px solid #f0b84b' : '1px solid #e5e7eb',
                             background: item.path === activeFile ? '#fff7e6' : '#fff',
                             borderRadius: 10,
                             padding: '12px 14px',
-                            cursor: 'pointer',
+                            cursor: item.exists ? 'pointer' : 'not-allowed',
+                            opacity: item.exists ? 1 : 0.65,
                           }}
                         >
-                          <div style={{ fontWeight: 700, marginBottom: 4 }}>{getFileDisplayTitle(item.path)}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <div style={{ fontWeight: 700 }}>{getFileDisplayTitle(item.path)}</div>
+                            {!item.exists && <Tag color="default" style={{ marginInlineEnd: 0 }}>未创建</Tag>}
+                          </div>
                           <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6 }}>{item.path}</div>
                           <div style={{ fontSize: 12, color: '#444' }}>{getFileDescription(item.path)}</div>
                         </button>
@@ -576,19 +605,21 @@ export default function WorkspacePage() {
                       renderItem={(item) => (
                         <List.Item
                           style={{
-                            cursor: 'pointer',
+                            cursor: item.exists ? 'pointer' : 'not-allowed',
                             paddingInline: 12,
                             borderRadius: 8,
                             background: item.path === activeFile ? '#fff7e6' : 'transparent',
                             marginBottom: 8,
+                            opacity: item.exists ? 1 : 0.65,
                           }}
-                          onClick={() => handleSwitchFile(item.path)}
+                          onClick={() => item.exists && handleSwitchFile(item.path)}
                         >
                           <List.Item.Meta
                             title={
                               <Space size={8}>
                                 <Text strong={item.path === activeFile}>{getFileDisplayTitle(item.path)}</Text>
                                 <Text type="secondary">{item.path}</Text>
+                                {!item.exists && <Tag color="default">未创建</Tag>}
                               </Space>
                             }
                             description={getFileDescription(item.path)}
@@ -710,6 +741,15 @@ export default function WorkspacePage() {
                     }
                   >
                     <Paragraph type="secondary">{getFileDescription(activeFile)}</Paragraph>
+                    {!editableFiles.find((entry) => entry.path === activeFile) && getFileGroup(activeFile) === 'core' && (
+                      <Alert
+                        type="warning"
+                        showIcon
+                        style={{ marginBottom: 16 }}
+                        message={`${activeFile} 当前未创建`}
+                        description="这个档案目前没有对应文件，所以暂时无法编辑。现在会先标记出来，后续可以继续补“创建缺失文件”按钮。"
+                      />
+                    )}
                     <TextArea
                       value={textContent}
                       onChange={(event) => {

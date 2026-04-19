@@ -1,5 +1,5 @@
 import { Alert, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography, message } from 'antd'
-import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useMemo, useState } from 'react'
 import { useHermesClient } from 'hermes_web_panel_client'
 import { useAsyncData } from '../hooks/useAsyncData.js'
@@ -52,10 +52,11 @@ export default function SourcesPage() {
     }
   }
 
-  const handleEdit = async (values: { backing_profile?: string; display_name?: string; note?: string }) => {
+  const handleEdit = async (values: { name: string; backing_profile?: string; display_name?: string; note?: string }) => {
     if (!target) return
     try {
       await client.updateConfigSource(target.id, {
+        name: values.name.trim(),
         backing_profile: values.backing_profile || null,
         display_name: values.display_name?.trim() || null,
         note: values.note?.trim() || null,
@@ -68,6 +69,26 @@ export default function SourcesPage() {
     } catch (e) {
       message.error(e instanceof Error ? e.message : '更新共享配置失败')
     }
+  }
+
+  const handleDelete = async (record: ConfigSourceItem) => {
+    Modal.confirm({
+      title: `删除共享配置：${record.display_name || record.name}`,
+      content: '会解除该共享配置与所有档案的继承关系，但不会删除承载档案里的实际文件。',
+      okText: '删除',
+      okButtonProps: { danger: true },
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await client.deleteConfigSource(record.id)
+          message.success('共享配置已删除')
+          reload()
+          reloadProfiles()
+        } catch (e) {
+          message.error(e instanceof Error ? e.message : '删除共享配置失败')
+        }
+      },
+    })
   }
 
   const handleBindProfiles = async (values: { profile_names: string[] }) => {
@@ -105,9 +126,12 @@ export default function SourcesPage() {
       dataIndex: 'name',
       key: 'name',
       render: (name: string, record: ConfigSourceItem) => (
-        <span>
-          {record.display_name || name} {record.kind === 'default' ? <Tag color="blue">默认</Tag> : null}
-        </span>
+        <Space direction="vertical" size={0}>
+          <span>
+            {record.display_name || name} {record.kind === 'default' ? <Tag color="blue">默认</Tag> : null}
+          </span>
+          {record.display_name ? <Typography.Text type="secondary">ID: {name}</Typography.Text> : null}
+        </Space>
       ),
     },
     { title: '类型', dataIndex: 'kind', key: 'kind' },
@@ -138,6 +162,7 @@ export default function SourcesPage() {
             onClick={() => {
               setTarget(record)
               editForm.setFieldsValue({
+                name: record.name,
                 backing_profile: record.backing_profile || undefined,
                 display_name: record.display_name || '',
                 note: record.note || '',
@@ -147,6 +172,16 @@ export default function SourcesPage() {
           >
             编辑
           </Button>
+          {record.kind !== 'default' ? (
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record)}
+            >
+              删除
+            </Button>
+          ) : null}
           <Button
             size="small"
             onClick={() => {
@@ -218,6 +253,9 @@ export default function SourcesPage() {
         onOk={() => editForm.submit()}
       >
         <Form form={editForm} layout="vertical" onFinish={handleEdit}>
+          <Form.Item name="name" label="内部名称" rules={[{ required: true, message: '请输入内部名称' }]}>
+            <Input />
+          </Form.Item>
           <Form.Item name="display_name" label="显示名称">
             <Input />
           </Form.Item>
