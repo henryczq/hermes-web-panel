@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 
 from admin_contract.models import HermesProfileSummary
+from admin_core.hermes_bindings import list_profile_bindings
 from admin_core.hermes_paths import default_hermes_home
 
 
@@ -168,7 +169,7 @@ def validate_profile_name(name: str) -> None:
         )
 
 
-def list_profile_summaries() -> list[HermesProfileSummary]:
+def list_profile_summaries(db_path: Path | None = None) -> list[HermesProfileSummary]:
     root = _profiles_root()
     items: list[HermesProfileSummary] = []
     active = _get_active_profile_name()
@@ -215,7 +216,19 @@ def list_profile_summaries() -> list[HermesProfileSummary]:
                 default_model=model,
                 provider=provider,
             ))
-    return items
+
+    bindings = {item.profile_name: item for item in list_profile_bindings([p.name for p in items], db_path)}
+    enriched: list[HermesProfileSummary] = []
+    for item in items:
+        binding = bindings.get(item.name)
+        if binding:
+            item.binding_mode = binding.mode
+            item.source_id = binding.source_id
+            item.source_name = binding.source_name
+        else:
+            item.binding_mode = "standalone"
+        enriched.append(item)
+    return enriched
 
 
 def get_profile_dir(name: str) -> Path:
